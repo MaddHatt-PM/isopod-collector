@@ -1,0 +1,22 @@
+.graph-panel {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.toolbar-panel {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.graph-node {
+    background-color: #3f51b5;
+    position: absolute;
+    border-color: #1c2566;
+    border-width: 3px;
+    /* border-radius: 33%; */
+
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #a3b1ff;
+}
