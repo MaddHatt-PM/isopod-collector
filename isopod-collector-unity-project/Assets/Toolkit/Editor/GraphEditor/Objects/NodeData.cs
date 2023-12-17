@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Sirenix.OdinInspector;
 
 namespace GraphEditor
 {
@@ -8,12 +9,30 @@ namespace GraphEditor
   {
     public string nodeName;
     public string nodeInfo;
+    [SerializeField, ReadOnly] private string _uuid;
+    public Guid Uuid
+    {
+      get
+      {
+        _uuid ??= Guid.NewGuid().ToString();
+        return new Guid(_uuid);
+      }
+    }
 
     public Vector2 editorPosition;
 
-    public NodeData(Vector2 position) {
+    public NodeData()
+    {
       nodeName = "name";
-      editorPosition = new Vector2(100,100);
+      _uuid = Guid.NewGuid().ToString();
+      editorPosition = new Vector2(100, 100);
+    }
+
+    public NodeData(Vector2 position)
+    {
+      nodeName = "name";
+      _uuid = Guid.NewGuid().ToString();
+      editorPosition = position;
     }
 
     public bool Equals(NodeData other)

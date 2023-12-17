@@ -6,59 +6,86 @@ namespace GraphEditor
   public class GraphNode : VisualElement
   {
     public readonly NodeData data;
-    public readonly int index;
 
-    public delegate void PropertiesChangedDelegate(NodeData data, int index);
+    public delegate void PropertiesChangedDelegate(NodeData data);
     public event PropertiesChangedDelegate OnPropertiesChanged;
+
+    public delegate void PrepareNodeForDeletion(GraphNode graphNode);
+    public event PrepareNodeForDeletion OnPrepareNodeForDeletion;
+
+    public delegate void ReleaseMouseEventsDelegate();
+    public static event ReleaseMouseEventsDelegate OnReleaseMouseEvents;
 
     private bool isDragging;
     private Vector2 dragStart;
 
     private static readonly float translationStepper = 10.0f;
-    private static readonly float radius = 44f;
+    private static readonly float radius = 50f;
+    private static readonly float cornerPercentage = 0.666f;
 
-    public GraphNode(NodeData data, int index)
+    public GraphNode(NodeData data)
     {
       this.data = data;
-      this.index = index;
 
       // Customize the appearance and behavior of the node
       style.width = 2 * radius;
       style.height = 2 * radius;
-      style.borderTopLeftRadius = radius * 0.66f;
-      style.borderTopRightRadius = radius * 0.66f;
-      style.borderBottomLeftRadius = radius * 0.66f;
-      style.borderBottomRightRadius = radius * 0.66f;
+      style.borderTopLeftRadius = radius * cornerPercentage;
+      style.borderTopRightRadius = radius * cornerPercentage;
+      style.borderBottomLeftRadius = radius * cornerPercentage;
+      style.borderBottomRightRadius = radius * cornerPercentage;
       style.position = Position.Absolute;
       style.left = data.editorPosition.x;
       style.top = data.editorPosition.y;
       AddToClassList("graph-node");
 
       // Add label
-      var label = new Label(data.nodeName) {
+      var titleLabel = new Label(data.nodeName)
+      {
         name = "Node Title",
       };
-      label.style.fontSize = 12;
-      Add(label);
+      titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+      titleLabel.style.fontSize = 14;
+      Add(titleLabel);
 
       // User Interaction
+      this.AddManipulator(new ContextualMenuManipulator(OnContextMenu));
       RegisterCallback<MouseDownEvent>(OnMouseDown);
       RegisterCallback<MouseUpEvent>(OnMouseUp);
       RegisterCallback<MouseMoveEvent>(OnMouseMove);
+
+      OnReleaseMouseEvents += ReleaseMouseEventsForOthers;
+    }
+
+    private void OnContextMenu(ContextualMenuPopulateEvent evt) {
+      evt.menu.AppendAction(
+        actionName: "Delete node and all connections",
+        action: (action) => {
+          OnPrepareNodeForDeletion?.Invoke(this);
+          },
+        actionStatusCallback: DropdownMenuAction.AlwaysEnabled
+      );
     }
 
     void OnMouseDown(MouseDownEvent evt)
     {
-      isDragging = true;
-      dragStart = evt.mousePosition;
-      BringToFront();
-      NotifyPropertiesChange();
-      evt.StopPropagation();
+
+      if (evt.button == 0)
+      {
+        OnReleaseMouseEvents(); ;
+        isDragging = true;
+        dragStart = evt.mousePosition;
+        BringToFront();
+        NotifyPropertiesChange();
+        evt.StopPropagation();
+      }
     }
 
     void OnMouseUp(MouseUpEvent evt)
     {
       isDragging = false;
+      style.left = Mathf.RoundToInt(data.editorPosition.x / translationStepper) * translationStepper;
+      style.top = Mathf.RoundToInt(data.editorPosition.y / translationStepper) * translationStepper;
       NotifyPropertiesChange();
       evt.StopPropagation();
     }
@@ -70,8 +97,8 @@ namespace GraphEditor
         var delta = evt.mousePosition - dragStart;
         data.editorPosition += delta;
 
-        style.left = Mathf.Floor(data.editorPosition.x / translationStepper) * translationStepper;
-        style.top = Mathf.Floor(data.editorPosition.y / translationStepper) * translationStepper;
+        style.left = data.editorPosition.x;
+        style.top = data.editorPosition.y;
         dragStart = evt.mousePosition;
 
         NotifyPropertiesChange();
@@ -79,9 +106,14 @@ namespace GraphEditor
       }
     }
 
+    private void ReleaseMouseEventsForOthers()
+    {
+      isDragging = false;
+    }
+
     private void NotifyPropertiesChange()
     {
-      OnPropertiesChanged?.Invoke(data, index);
+      OnPropertiesChanged?.Invoke(data);
     }
   }
 }
