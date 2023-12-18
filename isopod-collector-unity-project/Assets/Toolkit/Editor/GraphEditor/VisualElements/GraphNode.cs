@@ -1,9 +1,10 @@
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace GraphEditor
 {
-  public class GraphNode : VisualElement
+  public class GraphNode : VisualElement, IEquatable<GraphNode>
   {
     public readonly NodeData data;
 
@@ -16,8 +17,12 @@ namespace GraphEditor
     public delegate void ReleaseMouseEventsDelegate();
     public static event ReleaseMouseEventsDelegate OnReleaseMouseEvents;
 
+    public delegate void SelectNodeDelegate(GraphNode graphNode);
+    public static event SelectNodeDelegate OnSelectNode;
+
     private bool isDragging;
     private Vector2 dragStart;
+    private bool isSelected;
 
     private static readonly float translationStepper = 10.0f;
     private static readonly float radius = 50f;
@@ -55,6 +60,7 @@ namespace GraphEditor
       RegisterCallback<MouseMoveEvent>(OnMouseMove);
 
       OnReleaseMouseEvents += ReleaseMouseEventsForOthers;
+      OnSelectNode += SelectNode;
     }
 
     private void OnContextMenu(ContextualMenuPopulateEvent evt) {
@@ -69,10 +75,10 @@ namespace GraphEditor
 
     void OnMouseDown(MouseDownEvent evt)
     {
-
       if (evt.button == 0)
       {
-        OnReleaseMouseEvents(); ;
+        OnReleaseMouseEvents?.Invoke();
+        OnSelectNode?.Invoke(this);
         isDragging = true;
         dragStart = evt.mousePosition;
         BringToFront();
@@ -111,9 +117,22 @@ namespace GraphEditor
       isDragging = false;
     }
 
+    private void SelectNode(GraphNode node) {
+      if (isSelected) RemoveFromClassList("graph-node-selected");
+      isSelected = node.Equals(this);
+      if (isSelected) AddToClassList("graph-node-selected");
+    }
+
     private void NotifyPropertiesChange()
     {
       OnPropertiesChanged?.Invoke(data);
+    }
+
+    public bool Equals(GraphNode o)
+    {
+      if (data is null && o.data is null) return true;
+      if (data is null || o.data is null) return false;
+      return data.Uuid == o.data.Uuid;
     }
   }
 }

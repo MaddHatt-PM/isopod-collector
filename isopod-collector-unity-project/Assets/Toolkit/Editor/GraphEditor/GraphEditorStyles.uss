@@ -37,10 +37,14 @@
     position: absolute;
     border-color: #1c2566;
     border-width: 2px;
-    /* border-radius: 33%; */
 
     align-items: center;
     justify-content: center;
     font-size: 10px;
     color: #a3b1ff;
+}
+
+.graph-node-selected {
+    border-color: rgb(100, 119, 226);
+    border-width: 4px;
 }

@@ -27,6 +27,8 @@ namespace GraphEditor
     private VisualElement userEventCatcher;
     private VisualElement graphContent;
     private TiledBackground tiledBackground;
+
+    private GraphNode selectedNode = null;
     private bool isPanning = false;
     private Vector2 panOffset = Vector2.zero;
 
@@ -112,6 +114,9 @@ namespace GraphEditor
       userEventCatcher.RegisterCallback<MouseDownEvent>(OnMouseDown);
       userEventCatcher.RegisterCallback<MouseMoveEvent>(OnMouseMove);
       userEventCatcher.RegisterCallback<MouseUpEvent>(OnMouseUp);
+
+      // Static Delegates
+      GraphNode.OnSelectNode += SelectNode;
     }
 
     private void OnContextMenu(ContextualMenuPopulateEvent evt)
@@ -211,6 +216,10 @@ namespace GraphEditor
       graphContent.Remove(node);
 
       EditorUtility.SetDirty(CurrentGraphData);
+    }
+
+    private void SelectNode(GraphNode node) {
+      selectedNode = node;
     }
 
     [UnityEditor.Callbacks.OnOpenAsset(1)]
