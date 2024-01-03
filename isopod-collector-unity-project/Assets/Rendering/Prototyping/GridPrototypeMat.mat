@@ -45,8 +45,8 @@ Material:
     - _Smoothness: 0
     - _TileLength: 1
     m_Colors:
-    - _primaryColor: {r: 0.34026206, g: 0.34026206, b: 0.34699997, a: 1}
-    - _secondaryColor: {r: 0.30221048, g: 0.30221048, b: 0.31899998, a: 1}
+    - _primaryColor: {r: 0.26415092, g: 0.23187965, b: 0.21804911, a: 1}
+    - _secondaryColor: {r: 0.23584908, g: 0.20904727, b: 0.19468674, a: 1}
   m_BuildTextureStacks: []
 --- !u!114 &4123284485625107863
 MonoBehaviour:
