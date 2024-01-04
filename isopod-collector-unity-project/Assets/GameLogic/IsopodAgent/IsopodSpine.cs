@@ -15,7 +15,7 @@ public class IsopodSpine : Spline
 
   [Header("Creation Values")]
   public int segments = 7;
-  public float adultLength = 1f;
+  public float arcLength = 1f;
   public float lifeStageScaler = 1f;
   public float individualSizeScaler = 1f;
 
@@ -34,16 +34,28 @@ public class IsopodSpine : Spline
   [SerializeField] Vector2 verticalExtents = new(-90f, 45f);
   [SerializeField, Range(-1f, 1f)] float verticalAim;
 
+  [SerializeField, Range(0f, 1f)] float archValue = 0f;
+  [SerializeField] float archRatioToLength = 1f;
+
   [SerializeField, HideInInspector] List<Transform> segmentTransforms;
+
+  Vector3 origTailPoint;
+  Vector3 origMidPoint;
+  Vector3 origHeadPoint;
 
   [ContextMenu("Reset Spine")]
   public void ResetSpine()
   {
-    points = new[]{
-            new Vector3(0, 0, 0),
-            new Vector3(0, 0, adultLength * 0.5f),
-            new Vector3(0, 0, adultLength),
-            new Vector3(0, 0, adultLength) };
+    origTailPoint = new Vector3(0, 0, 0);
+    origMidPoint = new Vector3(0, 0, arcLength * 0.5f);
+    origHeadPoint = new Vector3(0, 0, arcLength);
+
+    points = new[] {
+        origTailPoint,
+        origMidPoint,
+        origHeadPoint, 
+        origHeadPoint // Intentional duplicate for quadratic bezier
+        };
 
     modes = new[] {
             BezierControlPointMode.Free,
@@ -96,8 +108,8 @@ public class IsopodSpine : Spline
 
   private void Update()
   {
-    var midPoint = points[1];
-    Vector3 rotationOrigin = new Vector3(0, 0, adultLength) - midPoint;
+    var mid = origMidPoint;
+    Vector3 rotationOrigin = new Vector3(0, 0, arcLength) - mid;
 
     var horAngle = Mathf.Lerp(horizontalExtents.x, horizontalExtents.y, (horizontalAim * 0.5f) + 0.5f);
     var reducer = Mathf.Sin(1f - Mathf.Abs(horizontalAim));
@@ -106,7 +118,12 @@ public class IsopodSpine : Spline
           : Mathf.Lerp(0f, -1f * verticalExtents.x, verticalAim * reducer);
 
     Vector3 p = Quaternion.Euler(verAngle, horAngle, 0f) * rotationOrigin / CalculateArcLength();
-    p += midPoint;
+    p += mid;
+
+    var arch = arcLength * archRatioToLength * archValue;
+    mid.y += arch;
+    points[1] = mid;
+
     points[2] = p;
     points[3] = p;
 
